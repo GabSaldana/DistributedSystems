@@ -1,0 +1,6 @@
+timedatectl set-ntp true
+timedatectl set-local-rtc true
+timedatectl
+timedatectl set-local-rtc 0
+timedatectl
+sudo service ntp restart

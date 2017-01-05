@@ -1,0 +1,120 @@
+/*PROCESOS*/
+
+Forma en la que le sistema adimnistra a los programas que han sido 
+ejecutados, existe un proceso padre de padres identficado con el PID=1.
+
+*TIPOS DE IDENTIFICADORES:
+
+*pid: The is the process ID (PID) of the process you call the Process.pid method in.
+
+*ppid: The PID of the parent process (the process that spawned the current one). For example, if you run ruby test.rb in a bash shell, PPID in that process would be the PID of Bash.
+
+*uid: The UNIX ID of the user the process is running under.
+
+*euid: The effective user ID that the process is running under. The EUID determines what a program is allowed to do, based on what the user with this UID is allowed to do. Typically the same as uid, but can be different with commands like sudo.
+
+*gid: The UNIX group ID the program is running under.
+
+*egid: Like euid, but for groups.
+
+
+/*FUNCIONES Y ESTRUCTURAS*/
+
+1.-pid_t fork(); crea un nuevo proceso hijo, regresa un pid_t ( signed int) con valor de 0 para el hijo , -1 en caso de error ,y para el padre el PID del hijo.
+
+Estos valores no son el PID DE LOS PROCESOS PADRE E HIJO
+sirven para identificar ambos procesos.
+The child process and the parent process run in separate memory spaces.
+Al ejecutar fork se tienen dos procesos identicos corriendo.
+
+
+2.-pid_t wait (int *status-ptr) ; Manda a pedir el estatus de un proceso, suspende la ejecucion de el proceso padre hasta que el hijo muera.
+
+The return value is normally the process ID of the child process whose status is reported.The status information from the child process is stored in status.
+
+
+3.-void exit(0) ; Indica al programa padre que el programa hijo termino con exito
+
+
+ÁRBOLES:
+//Hijos de un mismo padre(horizontal)
+main()
+{
+   pid_t pid;
+   int j;
+
+   for(j = 0; j < 10; j++){
+      
+      pid = fork();
+       if(pid != 0){
+	   wait(NULL);	
+	   sleep(3);
+       }
+	else if(pid == 0){
+	   printf("El padre del proceso %d es %d, j = %d\n", getpid(), getppid(), j);
+	   exit(0);
+	}
+	else{
+	   printf("Error\n");
+	   exit(1);
+	}
+   }
+
+}
+
+//Hijos de los Hijos (vertical)
+
+
+
+main()
+{
+   pid_t pid;
+   int j;
+
+   for(j = 0; j < 10; j++){
+	pid=fork();
+	if(pid != 0)      
+	   break;//quitar el break hace 1023 hijos
+   }
+printf("El padre del proceso %d es %d, j = %d\n", getpid(), getppid(), j);
+sleep(3);
+}
+
+
+/*SEMAFOROS*/
+
+
+Permiten que se ejecuten instrucciones d eun programa e impide a los demas procesos ejecutar ese mismo conjunto de instrucciones.Estos procesos comparten el mismo semaforo agrupados bajo un identificador unico. Para que un semaforo cambie de estado el proceso debe cambiar el valor del semaforo ya sea umentando su valor o decrementandolo.
+
+ El funcionamiento del semáforo es como el de una variable contador. Imaginemos que el semáforo controla un fichero y que inicialmente tiene el valor 1 (está "verde"). Cuando un proceso quiere acceder al fichero, primero debe decrementar el semáforo. El contador queda a 0 y como no es negativo, deja que el proceso siga su ejecución y, por tanto, acceda al fichero.
+
+Ahora un segundo proceso lo intenta y para ello también decrementa el contador. Esta vez el contador se pone a -1 y como es negativo, el semáforo se encarga de que el proceso quede "bloqueado" y "dormido" en una cola de espera. Este segundo proceso no continuará por tanto su ejecución y no accederá al fichero.
+
+Supongamos ahora que el primer proceso termina de escribir el fichero. Al acabar con el fichero debe incrementar el contador del semáforo. Al hacerlo, este contador se pone a 0. Como no es negativo, el semáforo se encarga de mirar el la cola de procesos pendientes y "desbloquear" al primer proceso de dicha cola. Con ello, el segundo proceso que quería acceder al fichero continua su ejecución y accede al fichero.
+
+Cuando este proceso también termine con el fichero, incrementa el contador y el semáforo vuelve a ponerse a 1, a estar "verde".
+
+Es posible hacer que el valor inicial del semáforo sea, por ejemplo, 3, con lo que pasarán los tres primeros procesos que lo intenten. Pueden a su vez quedar muchos procesos encolados simultáneamente, con lo que el contador quedará con un valor negativo grande. Cada vez que un proceso incremente el contador (libere el recurso común), el primer proceso encolado despertará. Los demás seguirán dormidos. 
+
+
+/*FUNCIONES Y ESTRUCTURAS*/
+
+struct sembuf{//modela la operacion a ser realizada al semaforo
+   ushort sem_num;//numero del semaforo
+   short sem_op;//-1 = decremento , 1= incremento
+   short  sem_flg;// mascara de bits
+}
+
+
+1.- key_t  ftok(char *, int) Obtiene la clave del semaforo,se suministra como primer parámetro el nombre y path de un fichero cualquiera que exista y como segundo un entero cualquiera.Todos los procesos que quieran compartir el semáforo, deben suministrar el mismo fichero y el mismo entero. 
+
+2.-int semget (key_t, int, int) nos permite obtener un array de semáforos. Se le pasa como primer parámetro la clave obtenida, el segundo parámetro es el número de semáforos que queremos y el tercer parámetro son flags. 0600 | IPC_CREATE que indica permiso de lectura y escritura para el propietario y que los semáforos se creen si no lo están al llamar a semget().Devuelve un identificador del array de semáforos.
+
+
+
+http://www.chuidiang.com/clinux/ipcs/semaforo.php
+
+
+
+
+

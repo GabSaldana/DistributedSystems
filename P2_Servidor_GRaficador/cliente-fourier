@@ -1,0 +1,103 @@
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
+
+enum packageId{
+	BORRAR,
+	GRAFICA
+};
+
+double radialToDegrees(double );
+double impar(int );
+
+int main(int argc, char const *argv[])
+{
+	struct sockaddr_in msg_to_server_addr, client_addr, server_addr;
+   int s;
+   char *msg;
+   int mode = atoi(argv[1]);
+   s = socket(AF_INET, SOCK_DGRAM, 0);
+   msg = (char *)malloc(sizeof(char)*30);
+
+   bzero((char *)&server_addr, sizeof(server_addr));
+
+   bzero((char *)&msg_to_server_addr, sizeof(msg_to_server_addr));
+   msg_to_server_addr.sin_family = AF_INET;
+   msg_to_server_addr.sin_addr.s_addr = inet_addr(argv[2]);
+   msg_to_server_addr.sin_port = htons(atoi(argv[3]));
+
+   bzero((char *)&client_addr, sizeof(client_addr));
+   client_addr.sin_family = AF_INET;
+   client_addr.sin_addr.s_addr = INADDR_ANY;
+   client_addr.sin_port = htons(0);
+
+   bind(s, (struct sockaddr *)&client_addr,sizeof(client_addr));
+
+   int j=0;
+   double suma = 0.0f;
+   double con = -M_PI;
+   int imp=0;
+   double temp = 0.0f;
+   if(mode ==1){
+   	while(1){
+	suma = 0.0f;
+	con = -M_PI;
+   	while (con<M_PI){
+   		suma =0.0f;
+		for(int i =0; i<=j;i++){
+			imp = (1+(2*i));
+			//printf("%d,%d\n",imp,i );
+			temp = sin(imp*con);
+			suma += (1.0f/imp) * temp;
+		}
+		suma = (4.0f*suma)/M_PI;
+		sprintf(msg, "%d,%.4lf,%.4lf", GRAFICA, con, suma);
+		sendto(s, msg, 30 * sizeof(char ), 0, (struct sockaddr *) &msg_to_server_addr, sizeof(msg_to_server_addr));
+		printf("%s\n",msg );
+		con += 0.01f;
+	}
+		sprintf(msg, "%d,%.4lf,%.4lf", GRAFICA, M_PI, 0.0f);
+		sendto(s, msg, 30 * sizeof(char ), 0, (struct sockaddr *) &msg_to_server_addr, sizeof(msg_to_server_addr));
+   		j++;
+   	}	
+   }
+   else{
+   	while(1){
+	suma = 0.0f;
+	con = -M_PI;
+		while (con<M_PI){
+   		suma =0.0f;
+		for(int i =0; i<=j;i++){
+			imp = (1+(2*i));
+			//printf("%d,%d\n",imp,i );
+			temp = sin(imp*con);
+			suma += (1.0f/imp) * temp;
+		}
+		suma = (4.0f*suma)/M_PI;
+		sprintf(msg, "%d,%.4lf,%.4lf", BORRAR, con, suma);
+		sendto(s, msg, 30 * sizeof(char ), 0, (struct sockaddr *) &msg_to_server_addr, sizeof(msg_to_server_addr));
+		printf("%s\n",msg );
+		con += 0.01f;
+		}
+	}
+	sprintf(msg, "%d,%.4lf,%.4lf", BORRAR, M_PI, 0.0f);
+		sendto(s, msg, 30 * sizeof(char ), 0, (struct sockaddr *) &msg_to_server_addr, sizeof(msg_to_server_addr));
+   		j++;
+   }
+  	close(s);
+	return 0;
+}
+double radialToDegrees(double radial){
+	return (radial*180)/M_PI;
+}
+double impar(int j){
+	return (double)(1+(2*j));
+}

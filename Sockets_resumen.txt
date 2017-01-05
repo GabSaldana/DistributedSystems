@@ -1,0 +1,114 @@
+EL SERVIDOR
+
+A partir de este punto comenzamos con lo que es la programación en C de los sockets. Si no tienes unos mínimos conocimientos de C, es mejor que los adquieras antes de seguir.
+PASOS SERVIDOR SOCKETS
+
+	#include <sys/types.h> /* See NOTES */
+	#include <sys/socket.h>
+
+    socket().Devolver y preparar un descriptor de fichero que el sistema posteriormente asociará a una conexión en red. como puede devolverlo open(). La función socket() no hace absolutamente nada. 
+
+     int socket(int domain, int type, int protocol);   
+
+DOMAIN:
+
+AF_UNIX, AF_LOCAL 	Local communication 	unix(7)
+AF_INET 	IPv4 Internet protocols	ip(7)
+AF_INET6 	IPv6 Internet protocols
+
+ TYPE:
+
+SOCK_STREAM
+    Provides sequenced, reliable, two-way, connection-based byte streams. An out-of-band data transmission mechanism may be supported. 
+SOCK_DGRAM
+    Supports datagrams (connectionless, unreliable messages of a fixed maximum length). 
+
+PROTOCOL: 0
+----------------------------------------------------------------
+
+    bind(). Avisar al sistema operativo de que hemos abierto un socket y queremos que asocie nuestro programa a dicho socket.El sistema todavía no atenderá a las conexiones de clientes,cuando empiece a hacerlo, tendrá que avisarnos a nosotros. 
+
+     int bind(int sockfd, const struct sockaddr *addr,
+                socklen_t addrlen);
+
+-------------------------------------------------------------
+
+    listen(). Avisar al sistema de que comience a atender dicha conexión de red.El sistema operativo anotará la conexión de cualquier cliente para pasárnosla cuando se lo pidamos. Si llegan clientes más rápido de lo que somos capaces de atenderlos, el sistema operativo hace una "cola" con ellos.
+
+    accept(). Pedir y aceptar las conexiones de clientes al sistema operativo.
+-- - - - ------------------------------------------------------
+
+shall receive a message from a connection-mode or connectionless-mode socket. It is normally used with connectionless-mode sockets because it permits the application to retrieve the source address of received data.
+
+    ssize_t recvfrom(int socket, void *restrict buffer, size_t length,
+       int flags, struct sockaddr *restrict address,
+       socklen_t *restrict address_len);
+
+
+socket
+    Specifies the socket file descriptor.
+buffer
+    Points to the buffer where the message should be stored.
+length
+    Specifies the length in bytes of the buffer pointed to by the buffer argument.
+flags
+    Specifies the type of message reception. Values of this argument are formed by logically OR'ing zero or more of the following values:
+
+    MSG_PEEK
+        Peeks at an incoming message. The data is treated as unread and the next recvfrom() or similar function shall still return this data.
+    MSG_OOB
+        Requests out-of-band data. The significance and semantics of out-of-band data are protocol-specific.
+    MSG_WAITALL
+        On SOCK_STREAM sockets this requests that the function block until the full amount of data can be returned. The function may return the smaller amount of data if the socket is a message-based socket, if a signal is caught, if the connection is terminated, if MSG_PEEK was specified, or if an error is pending for the socket.
+
+address
+    A null pointer, or points to a sockaddr structure in which the sending address is to be stored. The length and format of the address depend on the address family of the socket.
+address_len
+    Specifies the length of the sockaddr structure pointed to by the address argument. 
+---------------------------------------------------------------       
+ shall send a message through a connection-mode or connectionless-mode socket. If the socket is connectionless-mode, the message shall be sent to the address specified by dest_addr. If the socket is connection-mode, dest_addr shall be ignored.
+
+ssize_t sendto(int socket, const void *message, size_t length,
+       int flags, const struct sockaddr *dest_addr,
+       socklen_t dest_len);
+
+The sendto() function takes the following arguments:
+
+socket
+    Specifies the socket file descriptor.
+message
+    Points to a buffer containing the message to be sent.
+length
+    Specifies the size of the message in bytes.
+flags
+    Specifies the type of message transmission. Values of this argument are formed by logically OR'ing zero or more of the following flags:
+
+    MSG_EOR
+        Terminates a record (if supported by the protocol).
+    MSG_OOB
+        Sends out-of-band data on sockets that support out-of-band data. The significance and semantics of out-of-band data are protocol-specific.
+
+dest_addr
+    Points to a sockaddr structure containing the destination address. The length and format of the address depend on the address family of the socket.
+dest_len
+    Specifies the length of the sockaddr structure pointed to by the dest_addr argument.
+
+
+
+----------------------------------------------------------------
+    Escribir y recibir datos del cliente, por medio de las funciones write() y read(), que son exactamente las mismas que usamos para escribir o leer de un fichero.
+
+    Cierre de la comunicación y del socket, por medio de la función close(), que es la misma que sirve para cerrar un fichero.
+
+EL CLIENTE
+
+Los pasos que debe seguir un programa cliente son los siguientes:
+
+    Apertura de un socket, como el servidor, por medio de la función socket()
+
+    Solicitar conexión con el servidor por medio de la función connect(). Dicha función quedará bloqueada hasta que el servidor acepte nuestra conexión o bien si no hay servidor en el sitio indicado, saldrá dando un error. En esta llamada se debe facilitar la dirección IP del servidor y el número de servicio que se desea.
+
+    Escribir y recibir datos del servidor por medio de las funciones write() y read().
+
+    Cerrar la comunicación por medio de close().
+

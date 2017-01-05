@@ -1,0 +1,6 @@
+gcc gfxModified.c -c
+
+g++ Ag.cpp -c
+
+g++ Ag.o gfxModified.o -o Ag -lX11 
+
